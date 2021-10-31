@@ -24,7 +24,7 @@ async function run() {
         app.get('/offers', async (req, res) => {
             const cursor = dataCollection.find({});
             const users = await cursor.toArray();
-            // res.send(users)
+            res.send(users)
         })
     }
     finally {
