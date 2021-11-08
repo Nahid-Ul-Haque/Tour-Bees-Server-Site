@@ -51,7 +51,7 @@ async function run() {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
             const deletedService = await dataCollection.deleteOne(query);
-            res.json(deletedService);
+            res.json(true);
         })
 
 
