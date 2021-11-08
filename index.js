@@ -1,11 +1,12 @@
 const express = require('express');
+const { MongoClient } = require('mongodb');
 const cors = require('cors');
 require('dotenv').config()
-const { MongoClient } = require('mongodb');
+const ObjectId = require('mongodb').ObjectId;
+
+
 const app = express();
-
-
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5000
 
 app.use(cors());
 app.use(express.json());
@@ -19,19 +20,86 @@ async function run() {
     try {
         await client.connect();
         const database = client.db('Tour-Bees');
-        const dataCollection = database.collection('Data-Collection')
+        const dataCollection = database.collection('Data-Collection');
+        const cartCollection = database.collection("cart");
 
-        app.get('/offers', async (req, res) => {
-            const cursor = dataCollection.find({});
-            const users = await cursor.toArray();
-            res.json(users)
+        // GET API
+        app.post('/addOffers', async (req, res) => {
+            const result = await dataCollection.insertOne(req.body);
+            res.json(result)
         })
+
+
+        //   GET API for displaying Services
+        app.get('/offers', async (req, res) => {
+            const result = await dataCollection.find({}).toArray();
+            res.json(result)
+        })
+
+
+        //   GET API for displaying dynamically single Service
+        // app.get('/offers/:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const query = { _id: ObjectId(id) }
+        //     const service = await dataCollection.findOne(query)
+        //     res.json(service);
+        // })
+
+
+        // DELETE API for deleting services
+        app.delete('/deletedOffers/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const deletedService = await dataCollection.deleteOne(query);
+            res.json(deletedService);
+        })
+
+
+
+
+        // Cart
+
+        // GET API for Cart
+        app.get('/cart', async (req, res) => {
+            let query = {};
+            const email = req.query.email;
+
+            if (email) {
+                query = { email: email };
+            }
+            const result = await cartCollection.find(query).toArray();
+            res.send(result)
+        })
+
+
+
+        // POST API for Cart
+        app.post('/cart', async (req, res) => {
+            const cart = req.body
+            cart.createdAt = new Date()
+            const result = await cartCollection.insertOne(cart)
+            console.log(req.body);
+            console.log(result);
+            res.json(result)
+        })
+
+
+        // DELETE API for deleting orders
+        app.delete('/deletedOrder/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const deletedOrder = await cartCollection.deleteOne(query);
+            console.log(deletedOrder);
+            res.json(deletedOrder);
+        })
+
     }
+
     finally {
         // await client.close()
     }
 }
-run().catch(console.dir)
+run().catch(error => console.log(error))
 
 app.get('/', (req, res) => {
     res.send('Tour is Running')
